@@ -4,6 +4,8 @@
 # v0.1 2020-05-20
 #
 # List all unused packages
+#
+# ARW 2020-06-09 Added prefs handling for either format
 
 import sys
 from os import path
@@ -11,11 +13,28 @@ import plistlib
 import requests
 import xml.etree.ElementTree as ET
 
-plist = path.expanduser('~/Library/Preferences/JPCImporter.plist')
-fp = open(plist, 'rb')
-prefs = plistlib.load(fp)
-base = prefs['url'] + '/JSSResource/'
-auth = (prefs['user'], prefs['password'])
+# the array of used packages. Preloaded with any used in
+# prestage. (These change so rarely and are only accessible
+# via the new API)
+used = [
+    '484',  # DEPNotify-Suncorp-DEP-JC-1.9.0.pkg
+]
+
+# Which pref format to use, autopkg or jss_importer
+autopkg = False
+if autopkg:
+    plist = path.expanduser(
+        '~/Library/Preferences/com.github.autopkg..plist')
+    fp = open(plist, 'rb')
+    prefs = plistlib.load(fp)
+    base = prefs['JSS_URL'] + '/JSSResource/'
+    auth = (prefs['API_USERNAME'], prefs['API_PASSWORD'])
+else:
+    plist = path.expanduser('~/Library/Preferences/JPCImporter.plist')
+    fp = open(plist, 'rb')
+    prefs = plistlib.load(fp)
+    base = prefs['url'] + '/JSSResource/'
+    auth = (prefs['user'], prefs['password'])
 hdrs = {'Accept': 'application/json'}
 
 url = base + 'patchpolicies'
@@ -39,7 +58,6 @@ if ret.status_code != 200:
     exit(1)
 policies = ret.json()['policies']
 
-used = []
 for title in patchsoftwaretitles:
     url = base + 'patchsoftwaretitles/id/' + str(title['id'])
     # we get XML due to API bug :(

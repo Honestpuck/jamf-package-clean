@@ -1,16 +1,30 @@
 #!/usr/bin/env python3
 
+# remove.py
+
+# ARW 2020-06-09 Added prefs handling for either format
+
 import sys
 from os import path
 import plistlib
 import requests
 import xml.etree.ElementTree as ET
 
-plist = path.expanduser('~/Library/Preferences/JPCImporter.plist')
-fp = open(plist, 'rb')
-prefs = plistlib.load(fp)
-base = prefs['url'] + '/JSSResource/'
-auth = (prefs['user'], prefs['password'])
+# Which pref format to use, autopkg or jss_importer
+autopkg = False
+if autopkg:
+    plist = path.expanduser(
+        '~/Library/Preferences/com.github.autopkg..plist')
+    fp = open(plist, 'rb')
+    prefs = plistlib.load(fp)
+    base = prefs['JSS_URL'] + '/JSSResource/'
+    auth = (prefs['API_USERNAME'], prefs['API_PASSWORD'])
+else:
+    plist = path.expanduser('~/Library/Preferences/JPCImporter.plist')
+    fp = open(plist, 'rb')
+    prefs = plistlib.load(fp)
+    base = prefs['url'] + '/JSSResource/'
+    auth = (prefs['user'], prefs['password'])
 hdrs = {'Accept': 'application/json'}
 
 for line in sys.stdin:
